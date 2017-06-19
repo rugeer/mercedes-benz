@@ -2,8 +2,8 @@ library(dplyr)
 library(caret)
 library(plyr)
 library(Metrics)
-train.raw <- train_2
-test.raw <- test_2
+library(xgboost)
+library(ranger)
 #data preparation
 col_names <- colnames(train.raw[,-c(1,2)])
 # Determine data types in the data set
@@ -37,9 +37,12 @@ prepL0FeatureSet1 <- function(df) {
   
   return(list(id=id,y=y,predictors=predictors))
 }
-
 L0FeatureSet1 <- list(train=prepL0FeatureSet1(train.raw),
                       test=prepL0FeatureSet1(test.raw))
+common_features <- intersect(colnames(L0FeatureSet1$test$predictors), colnames(L0FeatureSet1$train$predictors))
+L0FeatureSet1$train$predictors <- L0FeatureSet1$train$predictors[,c(common_features)]
+L0FeatureSet1$test$predictors <- L0FeatureSet1$test$predictors[,c(common_features)]
+
 
 ###########################################################################################################################
 # Feature Set 2 (xgboost) - Boruta Confirmed Attributes
@@ -76,38 +79,3 @@ common_features <- intersect(colnames(L0FeatureSet2$test$predictors), colnames(L
 L0FeatureSet2$train$predictors <- L0FeatureSet2$train$predictors[,c(common_features)]
 L0FeatureSet2$test$predictors <- L0FeatureSet2$test$predictors[,c(common_features)]
 
-###########################################################################################################################
-#Level 0 Model Training
-#train model on one data fold
-trainOneFold <- function(this_fold,feature_set) {
-  # get fold specific cv data
-  cv.data <- list()
-  cv.data$predictors <- feature_set$train$predictors[this_fold,]
-  cv.data$ID <- feature_set$train$id[this_fold]
-  cv.data$y <- feature_set$train$y[this_fold]
-  # get training data for specific fold
-  train.data <- list()
-  train.data$predictors <- feature_set$train$predictors[-this_fold,]
-  train.data$y <- feature_set$train$y[-this_fold]
-  set.seed(825)
-  fitted_mdl <- do.call(train,
-                        c(list(x=train.data$predictors,y=train.data$y),
-                          CARET.TRAIN.PARMS,
-                          MODEL.SPECIFIC.PARMS,
-                          CARET.TRAIN.OTHER.PARMS))
-  yhat <- predict(fitted_mdl,newdata = cv.data$predictors,type = "raw")
-  score <- rmse(cv.data$y,yhat)
-  ans <- list(fitted_mdl=fitted_mdl,
-              score=score,
-              predictions=data.frame(ID=cv.data$ID,yhat=yhat,y=cv.data$y))
-  return(ans)
-}
-
-# make prediction from a model fitted to one fold
-makeOneFoldTestPrediction <- function(this_fold,feature_set) {
-  fitted_mdl <- this_fold$fitted_mdl
-  
-  yhat <- predict(fitted_mdl,newdata = feature_set$test$predictors,type = "raw")
-  
-  return(yhat)
-}
