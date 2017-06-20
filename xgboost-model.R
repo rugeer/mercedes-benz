@@ -2,21 +2,20 @@
 # set caret training parameters
 CARET.TRAIN.PARMS <- list(method="xgbTree")   
 
-CARET.TUNE.GRID <-  expand.grid(nrounds=200, 
+CARET.TUNE.GRID <-  expand.grid(nrounds=38, 
                                 max_depth=10, 
-                                eta=runif(2, 0.085,0.13), 
-                                gamma=runif(1,0,0.1), 
-                                colsample_bytree=c(1,0.4), 
+                                eta=0.1261129, 
+                                gamma=0.08, 
+                                colsample_bytree=0.4, 
                                 min_child_weight=1,
-                                subsample=1)
+                                subsample=0.6476219)
 
 MODEL.SPECIFIC.PARMS <- list(verbose=1) 
 # model specific training parameter
 CARET.TRAIN.CTRL <- trainControl(
   method = "cv",
-  number = 2,
-  verboseIter = TRUE,
-  early_stopping_rounds=3
+  number = 15,
+  verboseIter = TRUE
 )
 
 CARET.TRAIN.OTHER.PARMS <- list(trControl=CARET.TRAIN.CTRL,

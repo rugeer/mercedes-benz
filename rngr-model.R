@@ -1,15 +1,15 @@
 # set caret training parameters
 CARET.TRAIN.PARMS <- list(method="ranger")   
 
-mtry_options <- as.integer(sqrt(ncol(L0FeatureSet1$train$predictors)))
-CARET.TUNE.GRID <-  expand.grid(mtry=c(mtry_options,1.5*mtry_options,2*mtry_options))
+m <- as.integer(sqrt(ncol(L0FeatureSet1$train$predictors)))
+CARET.TUNE.GRID <-  expand.grid(mtry=31.919)
                                
 MODEL.SPECIFIC.PARMS <- list(verbose=1, num.trees=600) 
 
 # model specific training parameter
 CARET.TRAIN.CTRL <- trainControl(
   method = "cv",
-  number = 2,
+  number = 10,
   verboseIter = TRUE                                                        
 )
 

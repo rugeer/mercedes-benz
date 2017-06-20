@@ -4,6 +4,7 @@ library(plyr)
 library(Metrics)
 library(xgboost)
 library(ranger)
+library(nnet)
 #data preparation
 col_names <- colnames(train.raw[,-c(1,2)])
 # Determine data types in the data set
