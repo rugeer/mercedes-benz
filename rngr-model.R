@@ -1,4 +1,5 @@
 # set caret training parameters
+set.seed(123)
 CARET.TRAIN.PARMS <- list(method="ranger")   
 
 m <- as.integer(sqrt(ncol(L0FeatureSet1$train$predictors)))
@@ -10,7 +11,8 @@ MODEL.SPECIFIC.PARMS <- list(verbose=1, num.trees=600)
 CARET.TRAIN.CTRL <- trainControl(
   method = "cv",
   number = 10,
-  verboseIter = TRUE                                                        
+  verboseIter = TRUE,
+  savePredictions = 'final' # To save out of fold predictions for best parameter combinantions
 )
 
 CARET.TRAIN.OTHER.PARMS <- list(trControl=CARET.TRAIN.CTRL,
@@ -30,7 +32,9 @@ test.traincontrol <- trainControl(method="none",
                                   classProbs=FALSE)
 
 test.parameters <- list(trControl=test.traincontrol,
-                        tuneGrid=expand.grid(rngr_mdl$bestTune),
+                        #normally tuneGrid=expand.grid(rngr_mdl$bestTune)
+                        #optimal parameters already chosen though
+                        tuneGrid=CARET.TUNE.GRID ,
                         metric="RMSE")
 
 rngr_mdl_final <- do.call(train,
@@ -39,6 +43,13 @@ rngr_mdl_final <- do.call(train,
                            MODEL.SPECIFIC.PARMS,
                            test.parameters))
 
+###########################################################################################################################
+#Predicting the out of fold prediction probabilities for training data
+rngr_train_pred <- rngr_mdl$pred$pred[order(rngr_mdl$pred$rowIndex)]
+#Predicting probabilities for the test data
+rngr_test_pred <- predict(rngr_mdl, newdata = L0FeatureSet1$test$predictors,type = "raw")
+###########################################################################################################################
+#predictions for submission
 test_rngr_yhat <- predict(rngr_mdl_final,newdata = L0FeatureSet1$test$predictors,type = "raw")
 rngr_submission <- cbind(ID=L0FeatureSet1$test$id,y=test_rngr_yhat)
 write.csv(rngr_submission,file="rngr_sumbission.csv",row.names=FALSE)

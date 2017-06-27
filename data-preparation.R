@@ -5,6 +5,11 @@ library(Metrics)
 library(xgboost)
 library(ranger)
 library(nnet)
+library(Metrics)
+library(kernlab)
+library(LiblineaR)
+library(data.table)
+train.raw <- train.raw[which(train.raw$y!=265.32),]
 #data preparation
 col_names <- colnames(train.raw[,-c(1,2)])
 # Determine data types in the data set
@@ -13,9 +18,10 @@ unique_data_types <- unique(data_types)
 # Separate attributes by data type
 DATA_ATTR_TYPES <- lapply(unique_data_types,function(x){ names(data_types[data_types == x])})
 names(DATA_ATTR_TYPES) <- unique_data_types
-# create folds for training
-set.seed(13)
-data_folds <- createFolds(train.raw$y, k=5)
+#################################################################################################################
+#taking a random sample to build level 0 models
+set.seed(123)
+train.rows <- sample(nrow(train.raw), nrow(train.raw)*0.8)
 #################################################################################################################
 #Create Level 0 Model Feature Sets
 # Feature Set 1 - Boruta Confirmed and tentative Attributes
